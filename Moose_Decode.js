@@ -1,8 +1,8 @@
 /*:
  * ------------------------------------------------------------------------------
- * @plugindesc v1.00 - Decode text from how much the player knows.
+ * @plugindesc v1.1 - Decode text from how much the player knows.
  * @author Metaphoric Moose
- * @version 1.0
+ * @version 1.1
  * @url https://github.com/MetaphoricalMoose
  *
  * @param Source variable
@@ -131,13 +131,12 @@
  * ------------------------------------------------------------------------------
  * Terms of Use
  * ------------------------------------------------------------------------------
- * - Free for use in non-commercial projects with credits
+ * - Free for use in non-commercial projects with credits to MetaphoricalMoose :)
  * - Do not use in commercial projects
- * - Please credit MetaphoricalMoose if you use it :)
  */
 
 var Imported = Imported || {};
-Imported['Moose_Decode'] = "1.0";
+Imported['Moose_Decode'] = "1.1";
 
 var MooseDecode = MooseDecode || {};
 MooseDecode.parameters = {};
@@ -151,7 +150,7 @@ MooseDecode.parameters = {};
 	const LETTER_UNKNOWN_IN_KNOWN_CONTEXT = 0b01;
 	const LETTER_UNKNOWN_IN_UNKNOWN_CONTEXT = 0b00;
 
-	const NO_DECODING = [' ', ',', '.', ';', '?', '!', '\'' ];
+	const NO_DECODING = [' ', ',', '.', ';', '?', '!', '\'', '(', ')', '-' ];
 
     const parameters = PluginManager.parameters('Moose_Decode');
 
@@ -164,7 +163,7 @@ MooseDecode.parameters = {};
     MooseDecode.parameters['decoded_msg_background'] = getBackgroundValue(parameters['Decoded Message Background']);
     MooseDecode.parameters['other_non_decode'] = parameters['Additional non-decode characters'].split(',').map(c => c.trim());
 
-    let dictionnary = {};
+    let dictionary = {};
 
     // Persistance
     let _mooseDecode_DataManager_makeSaveContents = DataManager.makeSaveContents;
@@ -172,14 +171,14 @@ MooseDecode.parameters = {};
 
     DataManager.makeSaveContents = function() {
     	let contents = _mooseDecode_DataManager_makeSaveContents.call(this);
-    	contents.dictionnary = dictionnary;
+    	contents.dictionary = dictionary;
 
     	return contents;
     };
 
     DataManager.extractSaveContents = function(contents) {
 		_mooseDecode_DataManager_extractSaveContents.call(this, contents);
-		dictionnary = contents.dictionnary;
+		dictionary = contents.dictionary;
 	};
 
  	// Plugin commands
@@ -201,7 +200,7 @@ MooseDecode.parameters = {};
 
     // Logic
     learn = function(codedLetter, decodedLetter) {
-    	dictionnary[codedLetter] = decodedLetter;
+    	dictionary[codedLetter] = decodedLetter;
     }
 
     function wouldExceedLineLength(currentLength, nextWordLength) {
@@ -302,9 +301,9 @@ MooseDecode.parameters = {};
 		switch(currentCase) {
 			case LETTER_KNOWN_IN_KNOWN_CONTEXT:
 				// No need to change coloring here
-				return dictionnary[letter];
+				return dictionary[letter];
 			case LETTER_KNOWN_IN_UNKNOWN_CONTEXT:
-				return `\\c[${MooseDecode.parameters['decoded_color']}]${dictionnary[letter]}`;
+				return `\\c[${MooseDecode.parameters['decoded_color']}]${dictionary[letter]}`;
 			case LETTER_UNKNOWN_IN_KNOWN_CONTEXT:
 				return `\\c[${MooseDecode.parameters['coded_color']}]${letter}`;
 			case LETTER_UNKNOWN_IN_UNKNOWN_CONTEXT:
@@ -314,7 +313,7 @@ MooseDecode.parameters = {};
 	}
 
 	function evaluateCase(letter, currentContext) {
-		let letterIsKnown = Object.keys(dictionnary)
+		let letterIsKnown = Object.keys(dictionary)
 			.contains(letter);
 
 		if (letterIsKnown && currentContext === MODE_DECODE) return LETTER_KNOWN_IN_KNOWN_CONTEXT;
@@ -331,7 +330,7 @@ MooseDecode.parameters = {};
 	}
 
 	function letterIsKnown(letter) {
-		return Object.keys(dictionnary).contains(letter);
+		return Object.keys(dictionary).contains(letter);
 	}
 
 	function getPositionValue(userValue) {
