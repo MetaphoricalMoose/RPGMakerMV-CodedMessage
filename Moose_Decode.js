@@ -13,7 +13,7 @@
  *
  * @param Decode Rate
  * @desc Will represent how much was decode
- * @default 3
+ * @default 2
  * @type variable
  *
  * @param Output line length
